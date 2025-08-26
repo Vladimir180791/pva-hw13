@@ -1,6 +1,6 @@
 class AdminLoginPage(BasePage):
-    USERNAME_INPUT = (By.ID, "input-username")
-    PASSWORD_INPUT = (By.ID, "input-password")
+    USERNAME_INPUT = (By.ID, "standard_user")
+    PASSWORD_INPUT = (By.ID, "secret_sauce")
     LOGIN_BUTTON = (By.TAG_NAME, "button")
     LOGOUT_BUTTON = (By.CSS_SELECTOR, "a[href*='logout']")
     USER_PROFILE = (By.CSS_SELECTOR, "img.img-profile")
