@@ -13,7 +13,7 @@ def test_main_page_elements(browser):
 
 def test_catalog_page_elements(browser):
     page = CatalogPage(browser)
-    browser.get(f"{browser.url}index.php?route=product/category&path=20")  # Переходим в каталог
+    browser.get(f"{browser.url}index.php?route=product/category&path=20")
     page.check_elements()
 
 
