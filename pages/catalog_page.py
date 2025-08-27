@@ -2,9 +2,9 @@ from selenium.webdriver.common.by import By
 from .base_page import BasePage
 
 
-class MainPage(BasePage):
+class CatalogPage(BasePage):
     SEARCH_INPUT = (By.NAME, "search")
-    CART_BUTTON = (By.ID, "cart")
+    CART_BUTTON = (By.ID, "Product")
     CURRENCY_DROPDOWN = (By.CSS_SELECTOR, "button.btn-link dropdown-toggle")
     NAVIGATION_MENU = (By.CSS_SELECTOR, "nav#menu")
     SLIDESHOW = (By.CSS_SELECTOR, "div#carousel-banner-0")
