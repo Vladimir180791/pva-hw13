@@ -2,67 +2,88 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.edge.options import Options as EdgeOptions
 
 
 def pytest_addoption(parser):
-    parser.addoption("--browser", action="store", default="chrome", help="Browser to run tests: chrome or firefox")
-    parser.addoption("--url", action="store", default="https://www.saucedemo.com/", help="Base URL for the application")
-    parser.addoption("--headless", action="store_true", help="Run browser in headless mode")
+    """Добавление кастомных опций командной строки"""
+    parser.addoption("--browser", action="store", default="chrome", 
+                    help="Browser to run tests: chrome, firefox, edge")
+    parser.addoption("--base_url", action="store", 
+                    default="https://www.demoblaze.com", 
+                    help="Base URL for testing")
+    parser.addoption("--headless", action="store_true", 
+                    help="Run tests in headless mode")
 
 
 @pytest.fixture(scope="session")
 def base_url(request):
-    return request.config.getoption("--url")
+    """Фикстура для базового URL"""
+    return request.config.getoption("--base_url")
+
+
+@pytest.fixture(scope="function")
+def driver(request):
+    """Упрощенная фикстура драйвера без user-data-dir"""
+    browser_name = request.config.getoption("--browser")
+    headless = request.config.getoption("--headless")
+    
+    driver = None
+    
+    try:
+        if browser_name.lower() == "chrome":
+            options = ChromeOptions()
+            if headless:
+                options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
+            options.add_argument("--disable-extensions")
+            options.add_experimental_option('excludeSwitches', ['enable-logging'])
+            options.add_experimental_option('excludeSwitches', ['enable-automation'])
+            options.add_experimental_option('useAutomationExtension', False)
+            
+            driver = webdriver.Chrome(options=options)
+            
+        elif browser_name.lower() == "firefox":
+            options = FirefoxOptions()
+            if headless:
+                options.add_argument("--headless")
+            options.add_argument("--width=1920")
+            options.add_argument("--height=1080")
+            driver = webdriver.Firefox(options=options)
+            
+        elif browser_name.lower() == "edge":
+            options = EdgeOptions()
+            if headless:
+                options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--window-size=1920,1080")
+            driver = webdriver.Edge(options=options)
+            
+        else:
+            raise ValueError(f"Unsupported browser: {browser_name}")
+        
+        driver.implicitly_wait(10)
+        yield driver
+        
+    except Exception as e:
+        print(f"Error creating driver: {e}")
+        raise e
+        
+    finally:
+        if driver:
+            try:
+                driver.quit()
+            except Exception as e:
+                print(f"Error quitting driver: {e}")
 
 
 @pytest.fixture
-def browser(request, base_url):
-    browser_name = request.config.getoption("--browser")
-    headless = request.config.getoption("--headless")
-    driver = None
-
-    if browser_name == "chrome":
-        options = ChromeOptions()
-        if headless:
-            options.add_argument("--headless=new")
-        options.add_argument("--window-size=1920,1080")
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-    elif browser_name == "firefox":
-        options = FirefoxOptions()
-        if headless:
-            options.add_argument("--headless")
-        options.add_argument("--width=1920")
-        options.add_argument("--height=1080")
-        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
-    else:
-        raise pytest.UsageError("--browser should be chrome or firefox")
-
-    driver.implicitly_wait(5)
-    driver.base_url = base_url
-    
-    # Автоматический логин перед каждым тестом
-    driver.get(base_url)
-    
-    # Ждем появления полей для ввода
-    wait = WebDriverWait(driver, 10)
-    username_field = wait.until(EC.visibility_of_element_located((By.ID, "user-name")))
-    password_field = wait.until(EC.visibility_of_element_located((By.ID, "password")))
-    login_button = wait.until(EC.element_to_be_clickable((By.ID, "login-button")))
-    
-    # Вводим учетные данные
-    username_field.send_keys("standard_user")
-    password_field.send_keys("secret_sauce")
-    login_button.click()
-    
-    # Проверяем, что логин успешен (перешли на главную страницу)
-    wait.until(EC.url_contains("inventory"))
-    
-    yield driver
-    driver.quit()
+def wait(driver):
+    """Фикстура для явных ожиданий"""
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    return WebDriverWait(driver, 15)

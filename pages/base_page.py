@@ -1,40 +1,46 @@
-from selenium.webdriver.support import expected_conditions as EC
+# pages/base_page.py
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.webdriver.common.by import By
+import time
 
 
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
-        self.base_url = driver.base_url
+        self.base_url = driver.url
         self.wait = WebDriverWait(driver, 10)
 
-    def open(self, url):
-        self.driver.get(url)
+    def is_element_present(self, by, locator, timeout=10):
+        """Явное ожидание и проверка наличия элемента."""
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located((by, locator))
+            )
+            return True
+        except (TimeoutException, NoSuchElementException):
+            return False
 
-    def find_element(self, locator, time=10):
-        return WebDriverWait(self.driver, time).until(
-            EC.presence_of_element_located(locator),
-            message=f"Can't find element by locator {locator}"
-        )
+    def click_element(self, by, locator):
+        """Кликает на элемент с явным ожиданием."""
+        element = self.wait.until(EC.element_to_be_clickable((by, locator)))
+        element.click()
 
-    def find_elements(self, locator, time=10):
-        return WebDriverWait(self.driver, time).until(
-            EC.presence_of_all_elements_located(locator),
-            message=f"Can't find elements by locator {locator}"
-        )
+    def input_text(self, by, locator, text):
+        """Вводит текст в поле с явным ожиданием."""
+        element = self.wait.until(EC.visibility_of_element_located((by, locator)))
+        element.clear()
+        element.send_keys(text)
 
-    def element_is_visible(self, locator, time=10):
-        return WebDriverWait(self.driver, time).until(
-            EC.visibility_of_element_located(locator),
-            message=f"Element with locator {locator} is not visible"
-        )
+    def get_element_text(self, by, locator):
+        """Возвращает текст элемента."""
+        element = self.wait.until(EC.visibility_of_element_located((by, locator)))
+        return element.text
 
-    def element_is_clickable(self, locator, time=10):
-        return WebDriverWait(self.driver, time).until(
-            EC.element_to_be_clickable(locator),
-            message=f"Element with locator {locator} is not clickable"
-        )
-
-    def go_to_main_page(self):
-        self.driver.get(self.base_url)
+    def take_screenshot(self, name):
+        """Делает скриншот для отладки."""
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshot_{name}_{timestamp}.png"
+        self.driver.save_screenshot(filename)
+        return filename

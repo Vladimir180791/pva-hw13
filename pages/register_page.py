@@ -1,4 +1,4 @@
-from .admin_login_page import AdminLoginPage
+from .login_page import AdminLoginPage
 
 
 class RegisterPage(AdminLoginPage):
