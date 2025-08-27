@@ -1,30 +1,58 @@
-from selenium.webdriver.common.by import By
 from .base_page import BasePage
+from selenium.webdriver.common.by import By
+import random
 
 
 class MainPage(BasePage):
-    # Обновленные локаторы для главной страницы OpenCart
-    SEARCH_INPUT = (By.NAME, "search")
-    CART_BUTTON = (By.CSS_SELECTOR, "#cart button")
-    CURRENCY_DROPDOWN = (By.CSS_SELECTOR, "form#form-currency")
-    NAVIGATION_MENU = (By.CSS_SELECTOR, "nav#menu")
-    SLIDESHOW = (By.CSS_SELECTOR, "div.swiper-wrapper")
-    FEATURED_PRODUCTS_SECTION = (By.CSS_SELECTOR, "h3")
-    FOOTER = (By.TAG_NAME, "footer")
-    LOGO = (By.CSS_SELECTOR, "#logo")
-    MENU_BAR = (By.CSS_SELECTOR, "ul.navbar-nav")
+    # Locators
+    LOGO = (By.CLASS_NAME, "app_logo")
+    LOGIN_BUTTON = (By.ID, "login-button")
+    USERNAME_FIELD = (By.ID, "user-name")
+    PASSWORD_FIELD = (By.ID, "password")
+    PRODUCTS_TITLE = (By.CLASS_NAME, "title")
+    SHOPPING_CART_LINK = (By.CLASS_NAME, "shopping_cart_link")
+    MENU_BUTTON = (By.ID, "react-burger-menu-btn")
+    PRODUCT_ITEMS = (By.CLASS_NAME, "inventory_item")
+    PRODUCT_ITEM_NAMES = (By.CLASS_NAME, "inventory_item_name")
+    PRODUCT_ITEM_PRICES = (By.CLASS_NAME, "inventory_item_price")
+    ADD_TO_CART_BUTTONS = (By.CSS_SELECTOR, "button[class*='btn_inventory']")
+    CURRENCY_SWITCHER = (By.CLASS_NAME, "product_sort_container")
 
-    def check_elements(self):
-        """Проверяет наличие всех критичных элементов на странице."""
-        elements_to_check = [
-            (self.SEARCH_INPUT, "Search input"),
-            (self.CART_BUTTON, "Cart button"),
-            (self.CURRENCY_DROPDOWN, "Currency dropdown"),
-            (self.NAVIGATION_MENU, "Navigation menu"),
-            (self.FEATURED_PRODUCTS_SECTION, "Featured products section"),
-            (self.FOOTER, "Footer"),
-            (self.LOGO, "Logo")
-        ]
-        
-        for locator, element_name in elements_to_check:
-            assert self.is_element_present(*locator), f"{element_name} is not present"
+    def should_be_main_page(self):
+        # Проверка, что мы на главной странице после логина
+        assert "inventory" in self.driver.current_url, "This is not the main page"
+        self.element_is_visible(self.PRODUCTS_TITLE)
+        self.element_is_visible(self.SHOPPING_CART_LINK)
+
+    def get_product_items(self):
+        return self.find_elements(self.PRODUCT_ITEMS)
+
+    def get_random_product(self):
+        products = self.get_product_items()
+        return random.choice(products)
+
+    def add_product_to_cart(self, product):
+        add_button = product.find_element(*self.ADD_TO_CART_BUTTONS)
+        add_button.click()
+        return add_button.text.strip() == "Remove"  # Проверяем, что кнопка сменилась на "Remove"
+
+    def get_product_name(self, product):
+        return product.find_element(*self.PRODUCT_ITEM_NAMES).text
+
+    def get_product_price(self, product):
+        return product.find_element(*self.PRODUCT_ITEM_PRICES).text
+
+    def go_to_cart(self):
+        self.find_element(self.SHOPPING_CART_LINK).click()
+
+    def switch_currency(self, option_value="lohi"):
+        # lohi - low to high, hilo - high to low
+        dropdown = self.find_element(self.CURRENCY_SWITCHER)
+        dropdown.click()
+        from selenium.webdriver.support.ui import Select
+        select = Select(dropdown)
+        select.select_by_value(option_value)
+
+    def get_all_prices(self):
+        prices = self.find_elements(self.PRODUCT_ITEM_PRICES)
+        return [float(price.text.replace('$', '')) for price in prices]

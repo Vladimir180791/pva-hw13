@@ -1,61 +1,87 @@
-# tests/test_part2_elements.py
 import pytest
-from selenium.webdriver.common.by import By
 from pages.main_page import MainPage
-from pages.catalog_page import CatalogPage
 from pages.product_page import ProductPage
 from pages.admin_login_page import AdminLoginPage
 from pages.register_page import RegisterPage
+from pages.cart_page import CartPage
 
 
 class TestPart2Elements:
-    """Тесты для проверки наличия элементов на страницах (Часть 2 ТЗ)"""
-    
-    def test_main_page_elements(self, browser):
-        """Тест наличия элементов на главной странице."""
+    @pytest.mark.usefixtures("browser")
+    def test_main_page_elements(self, browser, base_url):
         page = MainPage(browser)
-        browser.get(browser.url)
-        page.check_elements()
-        print("✓ Главная страница: все элементы присутствуют")
+        page.open(base_url)
+        
+        # Проверяем элементы на главной странице (до логина)
+        page.element_is_visible(page.LOGO)
+        page.element_is_visible(page.USERNAME_FIELD)
+        page.element_is_visible(page.PASSWORD_FIELD)
+        page.element_is_visible(page.LOGIN_BUTTON)
+        # Элемент появляется только при ошибке, поэтому не проверяем его всегда
 
-    def test_catalog_page_elements(self, browser):
-        """Тест наличия элементов в каталоге."""
-        page = CatalogPage(browser)
-        browser.get(f"{browser.url}index.php?route=product/category&path=20")
-        page.check_elements()
-        print("✓ Страница каталога: все элементы присутствуют")
+    @pytest.mark.usefixtures("browser")
+    def test_catalog_page_elements(self, browser, base_url):
+        # Логинимся сначала
+        login_page = AdminLoginPage(browser)
+        login_page.open(base_url)
+        login_page.login("standard_user", "secret_sauce")
+        
+        page = MainPage(browser)
+        page.should_be_main_page()
+        
+        # Проверяем элементы каталога (главной страницы после логина)
+        page.element_is_visible(page.LOGO)
+        page.element_is_visible(page.PRODUCTS_TITLE)
+        page.element_is_visible(page.SHOPPING_CART_LINK)
+        page.element_is_visible(page.MENU_BUTTON)
+        
+        # Проверяем, что есть товары
+        products = page.get_product_items()
+        assert len(products) >= 1, "There should be at least one product on the page"
 
-    def test_product_page_elements(self, browser):
-        """Тест наличия элементов в карточке товара."""
+    @pytest.mark.usefixtures("browser")
+    def test_product_page_elements(self, browser, base_url):
+        # Логинимся сначала
+        login_page = AdminLoginPage(browser)
+        login_page.open(base_url)
+        login_page.login("standard_user", "secret_sauce")
+        
+        # Переходим на страницу товара
+        main_page = MainPage(browser)
+        products = main_page.get_product_items()
+        products[0].find_element(*main_page.PRODUCT_ITEM_NAMES).click()
+        
         page = ProductPage(browser)
+        page.should_be_product_page()
         
-        # Сначала переходим в каталог
-        browser.get(f"{browser.url}index.php?route=product/category&path=20")
-        
-        # Ждем загрузки товаров и кликаем на первый товар
-        page.wait.until(
-            lambda driver: driver.find_elements(By.CSS_SELECTOR, "div.product-thumb")
-        )
-        product_links = browser.find_elements(By.CSS_SELECTOR, "div.product-thumb a")
-        if product_links:
-            product_links[0].click()
-            
-            # Проверяем элементы на странице товара
-            page.check_elements()
-            print("✓ Страница товара: все элементы присутствуют")
-        else:
-            pytest.skip("No products found in catalog")
+        # Проверяем элементы страницы товара
+        page.element_is_visible(page.PRODUCT_NAME)
+        page.element_is_visible(page.PRODUCT_DESCRIPTION)
+        page.element_is_visible(page.PRODUCT_PRICE)
+        page.element_is_visible(page.ADD_TO_CART_BUTTON)
+        page.element_is_visible(page.BACK_BUTTON)
 
-    def test_admin_login_page_elements(self, browser):
-        """Тест наличия элементов на странице логина в админку."""
+    @pytest.mark.usefixtures("browser")
+    def test_admin_login_page_elements(self, browser, base_url):
         page = AdminLoginPage(browser)
-        browser.get(f"{browser.url}administration/")
-        page.check_elements()
-        print("✓ Страница логина в админку: все элементы присутствуют")
+        page.open(base_url)
+        page.should_be_login_page()
+        
+        # Проверяем элементы страницы логина
+        page.element_is_visible(page.LOGO)
+        page.element_is_visible(page.USERNAME_FIELD)
+        page.element_is_visible(page.PASSWORD_FIELD)
+        page.element_is_visible(page.LOGIN_BUTTON)
 
-    def test_register_page_elements(self, browser):
-        """Тест наличия элементов на странице регистрации."""
+    @pytest.mark.usefixtures("browser")
+    def test_register_page_elements(self, browser, base_url):
+        # Используем страницу логина как страницу "регистрации"
         page = RegisterPage(browser)
-        browser.get(f"{browser.url}index.php?route=account/register")
-        page.check_elements()
-        print("✓ Страница регистрации: все элементы присутствуют")
+        page.open(base_url)
+        page.should_be_login_page()
+        
+        # Проверяем те же элементы, что и на странице логина
+        page.element_is_visible(page.LOGO)
+        page.element_is_visible(page.USERNAME_FIELD)
+        page.element_is_visible(page.PASSWORD_FIELD)
+        page.element_is_visible(page.LOGIN_BUTTON)

@@ -1,24 +1,36 @@
-from selenium.webdriver.common.by import By
 from .base_page import BasePage
+from selenium.webdriver.common.by import By
 
 
 class ProductPage(BasePage):
-    # Локаторы для страницы товара OpenCart
-    PRODUCT_NAME = (By.CSS_SELECTOR, "h1")
-    PRODUCT_PRICE = (By.CSS_SELECTOR, "li h2, .price")
-    ADD_TO_CART_BUTTON = (By.ID, "button-cart")
-    QUANTITY_INPUT = (By.ID, "input-quantity")
-    PRODUCT_IMAGES = (By.CSS_SELECTOR, "ul.thumbnails")
-    DESCRIPTION_TAB = (By.CSS_SELECTOR, "a[href='#tab-description']")
+    # Locators
+    PRODUCT_NAME = (By.CLASS_NAME, "inventory_details_name")
+    PRODUCT_DESCRIPTION = (By.CLASS_NAME, "inventory_details_desc")
+    PRODUCT_PRICE = (By.CLASS_NAME, "inventory_details_price")
+    ADD_TO_CART_BUTTON = (By.CSS_SELECTOR, "button[class*='btn_inventory']")
+    BACK_BUTTON = (By.ID, "back-to-products")
+    SHOPPING_CART_BADGE = (By.CLASS_NAME, "shopping_cart_badge")
 
-    def check_elements(self):
-        """Проверяет наличие всех критичных элементов на странице товара."""
-        elements_to_check = [
-            (self.PRODUCT_NAME, "Product name"),
-            (self.PRODUCT_PRICE, "Product price"),
-            (self.ADD_TO_CART_BUTTON, "Add to cart button"),
-            (self.QUANTITY_INPUT, "Quantity input")
-        ]
-        
-        for locator, element_name in elements_to_check:
-            assert self.is_element_present(*locator), f"{element_name} is not present"
+    def should_be_product_page(self):
+        self.element_is_visible(self.PRODUCT_NAME)
+        self.element_is_visible(self.PRODUCT_PRICE)
+        self.element_is_visible(self.ADD_TO_CART_BUTTON)
+
+    def get_product_name(self):
+        return self.find_element(self.PRODUCT_NAME).text
+
+    def get_product_price(self):
+        return self.find_element(self.PRODUCT_PRICE).text
+
+    def add_to_cart(self):
+        self.find_element(self.ADD_TO_CART_BUTTON).click()
+
+    def back_to_products(self):
+        self.find_element(self.BACK_BUTTON).click()
+
+    def get_cart_items_count(self):
+        try:
+            badge = self.find_element(self.SHOPPING_CART_BADGE, time=2)
+            return int(badge.text)
+        except:
+            return 0
