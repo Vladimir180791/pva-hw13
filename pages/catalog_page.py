@@ -3,17 +3,24 @@ from .base_page import BasePage
 
 
 class CatalogPage(BasePage):
-    SEARCH_INPUT = (By.NAME, "search")
-    CART_BUTTON = (By.ID, "Product")
-    CURRENCY_DROPDOWN = (By.CSS_SELECTOR, "button.btn-link dropdown-toggle")
-    NAVIGATION_MENU = (By.CSS_SELECTOR, "nav#menu")
-    SLIDESHOW = (By.CSS_SELECTOR, "div#carousel-banner-0")
-    FEATURED_PRODUCTS_SECTION = (By.CSS_SELECTOR, "div#content h3")
-    FOOTER = (By.TAG_NAME, "footer")
+    CATEGORY_TITLE = (By.CSS_SELECTOR, "h2")
+    PRODUCT_LAYOUT = (By.CLASS_NAME, "product-layout")
+    SIDEBAR = (By.ID, "column-left")
+    LIST_VIEW_BUTTON = (By.ID, "list-view")
+    GRID_VIEW_BUTTON = (By.ID, "grid-view")
+    SORT_SELECT = (By.ID, "input-sort")
+    LIMIT_SELECT = (By.ID, "input-limit")
+    COMPARE_BUTTON = (By.ID, "compare-total")
+    BREADCRUMB = (By.CLASS_NAME, "breadcrumb")
 
     def check_elements(self):
-        assert self.is_element_present(*self.SEARCH_INPUT), "Search input is not present"
-        assert self.is_element_present(*self.CART_BUTTON), "Cart button is not present"
-        assert self.is_element_present(*self.CURRENCY_DROPDOWN), "Currency dropdown is not present"
-        assert self.is_element_present(*self.NAVIGATION_MENU), "Navigation menu is not present"
-        assert self.is_element_present(*self.SLIDESHOW), "Slideshow is not present"
+        """Проверяет наличие всех критичных элементов в каталоге."""
+        elements_to_check = [
+            (self.CATEGORY_TITLE, "Category title"),
+            (self.PRODUCT_LAYOUT, "Product layout"),
+            (self.SIDEBAR, "Sidebar"),
+            (self.BREADCRUMB, "Breadcrumb")
+        ]
+        
+        for locator, element_name in elements_to_check:
+            assert self.is_element_present(*locator), f"{element_name} is not present"

@@ -1,17 +1,24 @@
+from selenium.webdriver.common.by import By
+from .base_page import BasePage
+
+
 class AdminLoginPage(BasePage):
-    USERNAME_INPUT = (By.ID, "standard_user")
-    PASSWORD_INPUT = (By.ID, "secret_sauce")
-    LOGIN_BUTTON = (By.TAG_NAME, "button")
-    LOGOUT_BUTTON = (By.CSS_SELECTOR, "a[href*='logout']")
-    USER_PROFILE = (By.CSS_SELECTOR, "img.img-profile")
+    USERNAME_INPUT = (By.ID, "input-username")
+    PASSWORD_INPUT = (By.ID, "input-password")
+    LOGIN_BUTTON = (By.CSS_SELECTOR, "button[type='submit']")
+    FORGOTTEN_PASSWORD = (By.LINK_TEXT, "Forgotten Password")
+    OPENCART_LINK = (By.LINK_TEXT, "OpenCart")
+    HEADER = (By.CSS_SELECTOR, "div.panel-heading")
+    FOOTER = (By.CSS_SELECTOR, "footer")
 
-    def login(self, username, password):
-        self.driver.find_element(*self.USERNAME_INPUT).send_keys(username)
-        self.driver.find_element(*self.PASSWORD_INPUT).send_keys(password)
-        self.driver.find_element(*self.LOGIN_BUTTON).click()
-
-    def is_logged_in(self):
-        return self.is_element_present(*self.USER_PROFILE)
-
-    def logout(self):
-        self.driver.find_element(*self.LOGOUT_BUTTON).click()
+    def check_elements(self):
+        """Проверяет наличие всех критичных элементов на странице логина."""
+        elements_to_check = [
+            (self.USERNAME_INPUT, "Username input"),
+            (self.PASSWORD_INPUT, "Password input"),
+            (self.LOGIN_BUTTON, "Login button"),
+            (self.HEADER, "Header")
+        ]
+        
+        for locator, element_name in elements_to_check:
+            assert self.is_element_present(*locator), f"{element_name} is not present"

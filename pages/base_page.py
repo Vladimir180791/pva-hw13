@@ -10,6 +10,7 @@ class BasePage:
         self.wait = WebDriverWait(driver, 10)
 
     def is_element_present(self, by, locator):
+        """Явное ожидание и проверка наличия элемента."""
         try:
             self.wait.until(EC.visibility_of_element_located((by, locator)))
             return True
