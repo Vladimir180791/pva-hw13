@@ -3,23 +3,21 @@ from .base_page import BasePage
 
 
 class CatalogPage(BasePage):
+    # Локаторы для страницы каталога OpenCart
     CATEGORY_TITLE = (By.CSS_SELECTOR, "h2")
     PRODUCT_LAYOUT = (By.CLASS_NAME, "product-layout")
     SIDEBAR = (By.ID, "column-left")
-    LIST_VIEW_BUTTON = (By.ID, "list-view")
-    GRID_VIEW_BUTTON = (By.ID, "grid-view")
-    SORT_SELECT = (By.ID, "input-sort")
-    LIMIT_SELECT = (By.ID, "input-limit")
-    COMPARE_BUTTON = (By.ID, "compare-total")
     BREADCRUMB = (By.CLASS_NAME, "breadcrumb")
+    CONTENT = (By.ID, "content")
+    PRODUCT_COMPARE = (By.ID, "compare-total")
 
     def check_elements(self):
         """Проверяет наличие всех критичных элементов в каталоге."""
         elements_to_check = [
             (self.CATEGORY_TITLE, "Category title"),
             (self.PRODUCT_LAYOUT, "Product layout"),
-            (self.SIDEBAR, "Sidebar"),
-            (self.BREADCRUMB, "Breadcrumb")
+            (self.BREADCRUMB, "Breadcrumb"),
+            (self.CONTENT, "Content section")
         ]
         
         for locator, element_name in elements_to_check:
