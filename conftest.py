@@ -1,5 +1,6 @@
 import pytest
 from selenium import webdriver
+import tempfile
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
@@ -27,6 +28,9 @@ def driver(request):
     """Упрощенная фикстура драйвера без user-data-dir"""
     browser_name = request.config.getoption("--browser")
     headless = request.config.getoption("--headless")
+    
+    tmp_profile = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={tmp_profile}")
     
     driver = None
     
